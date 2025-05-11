@@ -1,0 +1,22 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.video-item {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.video-item a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.video-item a:hover {
+    text-decoration: underline;
+}

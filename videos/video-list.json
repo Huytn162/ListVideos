@@ -1,0 +1,12 @@
+[
+    {
+        "title": "Video mẫu 1",
+        "url": "https://www.youtube.com/watch?v=abc123",
+        "description": "Mô tả video mẫu 1"
+    },
+    {
+        "title": "Video mẫu 2",
+        "url": "https://www.youtube.com/watch?v=xyz789",
+        "description": "Mô tả video mẫu 2"
+    }
+]
