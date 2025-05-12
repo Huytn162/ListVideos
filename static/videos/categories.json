@@ -2,5 +2,9 @@
   {
     "name": "layla",
     "thumbnail": "/static/thumbnails/layla.jpg"
+  },
+  {
+    "name": "category2",
+    "thumbnail": "/static/thumbnails/category2.jpg"
   }
 ]

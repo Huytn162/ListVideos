@@ -7,17 +7,19 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- Header: hiển thị danh mục video theo thumb -->
+  <!-- Header: Hiển thị danh mục video với thumbnail -->
   <header>
     <h1>Chọn Danh Mục Video</h1>
     <div class="category-container" id="categoryContainer">
-      <!-- Các mục danh mục sẽ được load ở đây qua JavaScript -->
+      <!-- Các mục danh mục sẽ được load động bởi JavaScript -->
     </div>
   </header>
   
-  <!-- Phần hiển thị video feed của danh mục đã chọn -->
+  <!-- Phần video feed: Ẩn đi khi chưa có danh mục được chọn -->
   <section id="videoSection" style="display: none;">
-    <div class="video-feed" id="videoFeed"></div>
+    <div class="video-feed" id="videoFeed">
+      <!-- Danh sách video của danh mục được load động tại đây -->
+    </div>
     <div class="control-buttons">
       <button onclick="prevVideo()">Previous</button>
       <button onclick="nextVideo()">Next</button>
@@ -25,7 +27,7 @@
   </section>
   
   <!-- Loading indicator -->
-  <div class="loading" id="loading">Đang tải...</div>
+  <div class="loading" id="loading" style="display: none;">Đang tải...</div>
   
   <script src="js/script.js"></script>
 </body>

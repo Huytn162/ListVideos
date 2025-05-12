@@ -1,11 +1,11 @@
-/* Cài đặt chung */
+/* Cài đặt chung cho trang */
 body {
     font-family: Arial, sans-serif;
     background-color: #000;
     color: #fff;
-    margin: 0;
-    padding: 0;
-    overflow-y: scroll;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 /* Header và danh mục */
@@ -13,13 +13,15 @@ header {
     text-align: center;
     padding: 20px;
 }
+
 .category-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
 }
+
 .category {
-    width: 150px;
+    width: 160px;
     margin: 10px;
     text-align: center;
     cursor: pointer;
@@ -28,32 +30,39 @@ header {
     padding: 10px;
     border-radius: 8px;
 }
+
 .category:hover {
     transform: scale(1.05);
 }
+
 .category img {
-    width: 100%;
-    border-radius: 4px;
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
 }
 
-/* Video Feed */
+/* Phần video feed */
 .video-feed {
     position: relative;
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
 }
+
 .video-item {
     position: relative;
     width: 100%;
     height: 100vh;
     overflow: hidden;
 }
+
 .video-item video {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
+
 .video-title {
     position: absolute;
     bottom: 20px;
@@ -72,13 +81,14 @@ header {
     z-index: 100;
 }
 
-/* Control buttons */
+/* Nút điều khiển */
 .control-buttons {
     position: fixed;
     bottom: 20px;
     right: 20px;
     z-index: 110;
 }
+
 .control-buttons button {
     background: rgba(0, 0, 0, 0.6);
     border: none;
@@ -89,6 +99,7 @@ header {
     border-radius: 5px;
     cursor: pointer;
 }
+
 .control-buttons button:hover {
     background: rgba(0, 0, 0, 0.8);
 }
