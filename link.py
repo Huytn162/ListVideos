@@ -1,28 +1,49 @@
 import os
 import re
 import json
+import requests
 
-def transform_url(url: str) -> str:
+def check_url(url: str) -> bool:
     """
-    Chuyển đổi URL video từ dạng:
-       https://coomer.su/...
-    thành dạng:
-       https://n4.coomer.su/data/...
-    Phần còn lại của URL giữ nguyên.
+    Gửi yêu cầu HEAD đến URL với timeout ngắn.
+    Nếu nhận được phản hồi HTTP 200, trả về True.
+    """
+    try:
+        resp = requests.head(url, timeout=5)
+        return resp.status_code == 200
+    except Exception:
+        return False
+
+def validate_and_transform_url(url: str) -> str:
+    """
+    Nếu URL bắt đầu bằng "https://coomer.su/", 
+    lấy phần còn lại của URL và thử các candidate từ n1 đến n10 với định dạng:
+       https://n{i}.coomer.su/data/<remainder>
+    Trả về candidate đầu tiên hoạt động (HEAD request thành công).
+    Nếu không tìm được candidate nào, trả về None.
+    
+    Nếu URL không bắt đầu bằng "https://coomer.su/", chỉ kiểm tra và trả về URL đó nếu hoạt động.
     """
     if url.startswith("https://coomer.su/"):
         remainder = url[len("https://coomer.su/"):]
-        return "https://n4.coomer.su/data/" + remainder
-    return url
+        for i in range(1, 11):
+            candidate = f"https://n{i}.coomer.su/data/{remainder}"
+            if check_url(candidate):
+                return candidate
+        return None
+    else:
+        return url if check_url(url) else None
 
 def extract_video_urls_from_directory(directory: str) -> list:
     """
-    Quét tất cả các file .txt trong thư mục 'directory' để tìm các URL có phần mở rộng .mp4.
-    Trả về danh sách unique các URL sau khi đã chuyển đổi (nếu cần).
+    Quét tất cả các file .txt trong thư mục 'directory' để tìm các URL có đuôi .mp4.
+    Nếu mỗi dòng có định dạng: <video URL>,<label>, chỉ lấy phần trước dấu phẩy.
+    Sau đó, kiểm tra và chuyển đổi (nếu cần) thông qua validate_and_transform_url.
+    Trả về danh sách unique các URL hợp lệ.
     """
-    video_urls = set()  # Sử dụng set để tránh trùng lặp
-    # Biểu thức chính quy để nhận diện các URL có định dạng .mp4
-    url_pattern = re.compile(r'https?://[^\s]+?\.mp4\b')
+    video_urls = set()  # Dùng set tránh trùng lặp
+    # Regex để nhận diện các URL có định dạng .mp4 (dừng ngay khi gặp dấu phẩy)
+    url_pattern = re.compile(r'(https?://[^\s,]+\.mp4)', re.IGNORECASE)
     
     for root, _, files in os.walk(directory):
         for file in files:
@@ -30,13 +51,18 @@ def extract_video_urls_from_directory(directory: str) -> list:
                 file_path = os.path.join(root, file)
                 try:
                     with open(file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                        # Tìm tất cả các URL .mp4 trong nội dung
-                        matches = url_pattern.findall(content)
-                        for url in matches:
-                            # Biến đổi URL nếu cần theo yêu cầu:
-                            transformed_url = transform_url(url)
-                            video_urls.add(transformed_url)
+                        for line in f:
+                            line = line.strip()
+                            if not line:
+                                continue
+                            match = url_pattern.search(line)
+                            if match:
+                                original_url = match.group(1)
+                                valid_url = validate_and_transform_url(original_url)
+                                if valid_url:
+                                    video_urls.add(valid_url)
+                                else:
+                                    print(f"Link không hoạt động hoặc không tìm được candidate phù hợp: {original_url}")
                 except Exception as e:
                     print(f"Error reading file {file_path}: {e}")
     
@@ -44,23 +70,15 @@ def extract_video_urls_from_directory(directory: str) -> list:
 
 def save_video_list_as_json(video_urls: list, output_file: str) -> None:
     """
-    Lưu danh sách video URL vào file JSON với cấu trúc như sau:
+    Lưu danh sách video URL vào file JSON theo cấu trúc:
     [
        { "title": "", "url": "<video URL>", "description": "" },
        ...
     ]
     Nếu file đã tồn tại, merge với dữ liệu cũ dựa trên URL làm khóa duy nhất.
     """
-    video_entries = []
-    for url in video_urls:
-        entry = {
-            "title": "",
-            "url": url,
-            "description": ""
-        }
-        video_entries.append(entry)
+    video_entries = [{"title": "", "url": url, "description": ""} for url in video_urls]
     
-    # Nếu file JSON đã tồn tại, merge với dữ liệu cũ để tránh trùng lặp
     if os.path.exists(output_file):
         try:
             with open(output_file, "r", encoding="utf-8") as f:
@@ -86,7 +104,7 @@ def save_video_list_as_json(video_urls: list, output_file: str) -> None:
 def main():
     # Đường dẫn tới thư mục chứa các file log .txt
     logs_directory = r"C:\Users\84393\Downloads\Coomer\resources\config\logs"
-    # Đường dẫn file JSON đầu ra (bạn có thể thay đổi đường dẫn nếu cần)
+    # Đường dẫn file JSON đầu ra
     output_json_file = r"D:\video-list.json"
 
     video_urls = extract_video_urls_from_directory(logs_directory)
