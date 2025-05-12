@@ -4,174 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Video Feed - TikTok Style</title>
-  <style>
-    /* Cài đặt chung cho trang */
-    body {
-      margin: 0;
-      padding: 0;
-      background: #000;
-      font-family: Arial, sans-serif;
-      color: #fff;
-      overflow-y: scroll;
-    }
-    /* Container chứa toàn bộ video feed */
-    .video-feed {
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    /* Mỗi video chiếm 1 viewport */
-    .video-item {
-      position: relative;
-      width: 100%;
-      height: 100vh;
-      overflow: hidden;
-    }
-    /* Style cho video: phủ đầy container và giữ tỷ lệ */
-    .video-item video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    /* Tiêu đề video hiển thị ở dưới cùng */
-    .video-title {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      font-size: 24px;
-      text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-      z-index: 10;
-    }
-    /* Thông báo Loading ở giữa trang */
-    .loading {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 24px;
-      z-index: 100;
-    }
-    /* CSS cho nút điều khiển */
-    .control-buttons {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 110;
-    }
-    .control-buttons button {
-      background: rgba(0, 0, 0, 0.6);
-      border: none;
-      color: #fff;
-      padding: 10px 15px;
-      margin: 5px;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .control-buttons button:hover {
-      background: rgba(0, 0, 0, 0.8);
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- Thông báo Loading -->
+  <!-- Header: hiển thị danh mục video theo thumb -->
+  <header>
+    <h1>Chọn Danh Mục Video</h1>
+    <div class="category-container" id="categoryContainer">
+      <!-- Các mục danh mục sẽ được load ở đây qua JavaScript -->
+    </div>
+  </header>
+  
+  <!-- Phần hiển thị video feed của danh mục đã chọn -->
+  <section id="videoSection" style="display: none;">
+    <div class="video-feed" id="videoFeed"></div>
+    <div class="control-buttons">
+      <button onclick="prevVideo()">Previous</button>
+      <button onclick="nextVideo()">Next</button>
+    </div>
+  </section>
+  
+  <!-- Loading indicator -->
   <div class="loading" id="loading">Đang tải...</div>
   
-  <!-- Container video feed -->
-  <div class="video-feed" id="videoFeed"></div>
-  
-  <!-- Nút điều khiển: Previous và Next -->
-  <div class="control-buttons">
-    <button onclick="prevVideo()">Previous</button>
-    <button onclick="nextVideo()">Next</button>
-  </div>
-  
-  <script>
-    let videoList = [];
-    let currentIndex = 0; // Chỉ số video hiện tại để chuyển đổi theo nút bấm
-    const videoFeed = document.getElementById('videoFeed');
-    const loading = document.getElementById('loading');
-    
-    // Hàm tạo phần tử video feed từ dữ liệu JSON
-    function createVideoItem(videoData) {
-      const container = document.createElement('div');
-      container.className = 'video-item';
-      
-      // Tạo thẻ video với poster (thumbnail) và điều khiển (controls)
-      const videoEl = document.createElement('video');
-      videoEl.src = videoData.url;
-      videoEl.poster = videoData.thumb;
-      videoEl.muted = true;          // Bắt buộc với autoplay
-      videoEl.loop = true;
-      videoEl.playsInline = true;    // Cho iOS
-      videoEl.preload = "metadata";  // Tăng tốc khởi động video
-      videoEl.controls = true;       // Hiển thị thanh điều khiển (time, tua, volume, ...)
-      
-      // Tạo tiêu đề hiển thị trên video
-      const titleEl = document.createElement('div');
-      titleEl.className = 'video-title';
-      titleEl.textContent = videoData.title;
-      
-      container.appendChild(videoEl);
-      container.appendChild(titleEl);
-      return container;
-    }
-    
-    // Sử dụng IntersectionObserver để tự động phát/tạm dừng video khi cuộn
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        const video = entry.target.querySelector('video');
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
-          video.play().catch(err => console.error(err));
-        } else {
-          video.pause();
-        }
-      });
-    }, {
-      threshold: 0.7
-    });
-    
-    // Hàm cuộn đến video dựa theo chỉ số
-    function scrollToVideo(index) {
-      const videoItems = document.querySelectorAll('.video-item');
-      if (index >= 0 && index < videoItems.length) {
-        videoItems[index].scrollIntoView({ behavior: 'smooth' });
-        currentIndex = index;
-      }
-    }
-    
-    // Hàm chuyển sang video tiếp theo
-    function nextVideo() {
-      const videoItems = document.querySelectorAll('.video-item');
-      if (currentIndex < videoItems.length - 1) {
-        scrollToVideo(currentIndex + 1);
-      }
-    }
-    
-    // Hàm chuyển sang video trước đó
-    function prevVideo() {
-      if (currentIndex > 0) {
-        scrollToVideo(currentIndex - 1);
-      }
-    }
-    
-    // Tải danh sách video từ file JSON trong dự án
-    fetch('videos/video-list.json')
-      .then(response => response.json())
-      .then(data => {
-        videoList = data;
-        loading.style.display = 'none';
-        // Tạo phần tử video cho mỗi dữ liệu và thêm vào feed
-        videoList.forEach(videoData => {
-          const videoItem = createVideoItem(videoData);
-          videoFeed.appendChild(videoItem);
-          observer.observe(videoItem);
-        });
-      })
-      .catch(error => {
-        console.error('Lỗi tải JSON:', error);
-        loading.textContent = 'Lỗi tải danh sách video';
-      });
-  </script>
+  <script src="js/script.js"></script>
 </body>
 </html>
