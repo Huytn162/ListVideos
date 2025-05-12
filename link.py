@@ -2,10 +2,23 @@ import os
 import re
 import json
 
+def transform_url(url: str) -> str:
+    """
+    Chuyển đổi URL video từ dạng:
+       https://coomer.su/...
+    thành dạng:
+       https://n4.coomer.su/data/...
+    Phần còn lại của URL giữ nguyên.
+    """
+    if url.startswith("https://coomer.su/"):
+        remainder = url[len("https://coomer.su/"):]
+        return "https://n4.coomer.su/data/" + remainder
+    return url
+
 def extract_video_urls_from_directory(directory: str) -> list:
     """
     Quét tất cả các file .txt trong thư mục 'directory' để tìm các URL có phần mở rộng .mp4.
-    Trả về danh sách unique các URL.
+    Trả về danh sách unique các URL sau khi đã chuyển đổi (nếu cần).
     """
     video_urls = set()  # Sử dụng set để tránh trùng lặp
     # Biểu thức chính quy để nhận diện các URL có định dạng .mp4
@@ -21,7 +34,9 @@ def extract_video_urls_from_directory(directory: str) -> list:
                         # Tìm tất cả các URL .mp4 trong nội dung
                         matches = url_pattern.findall(content)
                         for url in matches:
-                            video_urls.add(url)
+                            # Biến đổi URL nếu cần theo yêu cầu:
+                            transformed_url = transform_url(url)
+                            video_urls.add(transformed_url)
                 except Exception as e:
                     print(f"Error reading file {file_path}: {e}")
     
@@ -29,23 +44,23 @@ def extract_video_urls_from_directory(directory: str) -> list:
 
 def save_video_list_as_json(video_urls: list, output_file: str) -> None:
     """
-    Lưu danh sách video URL vào file JSON với cấu trúc:
+    Lưu danh sách video URL vào file JSON với cấu trúc như sau:
     [
-        { "title": "", "url": "<video URL>", "description": "" },
-        ...
+       { "title": "", "url": "<video URL>", "description": "" },
+       ...
     ]
-    Nếu file đã tồn tại, sẽ merge với dữ liệu cũ (dựa trên URL làm khóa duy nhất).
+    Nếu file đã tồn tại, merge với dữ liệu cũ dựa trên URL làm khóa duy nhất.
     """
     video_entries = []
     for url in video_urls:
         entry = {
-            "title": "",         # Tạm để rỗng, bạn có thể cập nhật sau.
+            "title": "",
             "url": url,
-            "description": ""      # Tạm để rỗng, bạn có thể cập nhật sau.
+            "description": ""
         }
         video_entries.append(entry)
     
-    # Nếu file đã tồn tại, merge với dữ liệu cũ để tránh trùng lặp
+    # Nếu file JSON đã tồn tại, merge với dữ liệu cũ để tránh trùng lặp
     if os.path.exists(output_file):
         try:
             with open(output_file, "r", encoding="utf-8") as f:
@@ -56,7 +71,6 @@ def save_video_list_as_json(video_urls: list, output_file: str) -> None:
     else:
         existing_entries = []
     
-    # Merge với dữ liệu cũ dựa trên URL
     merged_dict = {entry["url"]: entry for entry in existing_entries}
     for entry in video_entries:
         merged_dict[entry["url"]] = entry
@@ -70,9 +84,10 @@ def save_video_list_as_json(video_urls: list, output_file: str) -> None:
         print(f"Error saving video list to JSON: {e}")
 
 def main():
-    # Đảm bảo cập nhật đường dẫn đúng vào thư mục chứa file .txt của bạn
+    # Đường dẫn tới thư mục chứa các file log .txt
     logs_directory = r"C:\Users\84393\Downloads\Coomer\resources\config\logs"
-    output_json_file = r"D:\video-list.json"  # Bạn có thể thay đổi đường dẫn lưu theo ý muốn
+    # Đường dẫn file JSON đầu ra (bạn có thể thay đổi đường dẫn nếu cần)
+    output_json_file = r"D:\video-list.json"
 
     video_urls = extract_video_urls_from_directory(logs_directory)
     if not video_urls:
